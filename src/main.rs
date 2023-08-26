@@ -1,12 +1,14 @@
 // [] work on error handling
 // [] add handling for /newcomments
+// [] use https://lib.rs/crates/tabled to print to tables
 use clap::{Parser, ValueEnum};
 use reqwest::StatusCode;
 use scraper::{Html, Selector};
+use colored::*;
 
 mod utils;
 
-#[derive(ValueEnum, Clone, Debug)]
+#[derive(ValueEnum, Clone)]
 enum Page {
     News,
     Newest,
@@ -65,10 +67,8 @@ async fn main() {
             Some(target_url) => target_url,
             _ => "no url found",
         };
-        println!("TITLE: {:?} \n", &title);
-        println!("LINK: {} \n", &href);
-        println!("====================");
+        println!("{}", &title.bold());
+        println!("{} \n", &href.dimmed());
+        println!("{}","==============".purple());
     }
-    // println!("{}", args.page);
-    // println!("{}", args.rows_limit);
 }
