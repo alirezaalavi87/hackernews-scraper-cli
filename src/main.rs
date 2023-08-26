@@ -1,10 +1,10 @@
 // [] work on error handling
 // [] add handling for /newcomments
-// [] use https://lib.rs/crates/tabled to print to tables
+// [] add pagination
 use clap::{Parser, ValueEnum};
+use colored::*;
 use reqwest::StatusCode;
 use scraper::{Html, Selector};
-use colored::*;
 
 mod utils;
 
@@ -16,7 +16,7 @@ enum Page {
     // NewComments,
     Ask,
     Show,
-    Jobs
+    Jobs,
 }
 impl Page {
     pub fn to_path(&self) -> &'static str {
@@ -27,7 +27,7 @@ impl Page {
             // Page::NewComments => "newcomments",
             Page::Ask => "ask",
             Page::Show => "show",
-            Page::Jobs => "jobs"
+            Page::Jobs => "jobs",
         }
     }
 }
@@ -57,18 +57,23 @@ async fn main() {
     };
 
     let document = Html::parse_document(&raw_html);
-    let title_selector = Selector::parse("span.titleline").unwrap();
+    let row_selector = Selector::parse("tr.athing").unwrap();
     let a_selector = Selector::parse("a").unwrap();
+    let rank_selector = Selector::parse("span.rank").unwrap();
 
-    for element in document.select(&title_selector) {
-        let a = element.select(&a_selector).next().unwrap();
+    for element in document.select(&row_selector) {
+        // select .nth(1) because first <a> contains the upvote link, and second
+        // is the posts URL
+        let rank = element.select(&rank_selector).next().unwrap().inner_html();
+        let a = element.select(&a_selector).nth(1).unwrap();
         let title = a.inner_html().to_string();
         let href = match a.value().attr("href") {
             Some(target_url) => target_url,
             _ => "no url found",
         };
-        println!("{}", &title.bold());
+
+        println!("{}{}", rank.magenta().dimmed(), &title.bold());
         println!("{} \n", &href.dimmed());
-        println!("{}","==============".purple());
+        println!("{}", "==============".purple());
     }
 }
